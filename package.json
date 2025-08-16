@@ -1,0 +1,105 @@
+{
+  "name": "console-log-manager",
+  "displayName": "Console Log Manager",
+  "description": "Quickly insert or remove console.log/debug statements.",
+  "version": "0.0.1",
+  "publisher": "bere-systems",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/<your-username>/<your-extension-repo>.git"
+  },
+  "activationEvents": [
+    "onCommand:extension.removeConsoleLogs",
+    "onCommand:extension.insertConsoleLog"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.removeConsoleLogs",
+        "title": "Remove Console Logs"
+      },
+      {
+        "command": "extension.insertConsoleLog",
+        "title": "Insert Console Log"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.removeConsoleLogs",
+        "key": "ctrl+alt+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.insertConsoleLog",
+        "key": "ctrl+alt+l",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Console Log Manager",
+      "properties": {
+        "removeConsoleLogs.includeWarn": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also remove console.warn statements"
+        },
+        "removeConsoleLogs.includeError": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also remove console.error statements"
+        },
+        "removeConsoleLogs.includeDebug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also remove console.debug statements"
+        },
+        "removeConsoleLogs.includeAll": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove all console.* statements"
+        },
+        "removeConsoleLogs.includeInline": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also remove inline console statements"
+        },
+        "removeConsoleLogs.autoCleanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically clean console logs on save"
+        },
+        "removeConsoleLogs.logPrefix": {
+          "type": "string",
+          "default": "👉🏻 --->| ",
+          "description": "Prefix for inserted console.log statements"
+        }
+      }
+    }
+  },
+  "icon": "icon.png",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.103.0",
+    "eslint": "^8.0.0",
+    "glob": "^10.0.0",
+    "mocha": "^10.0.0",
+    "typescript": "^5.0.0",
+    "vsce": "^2.15.0"
+  }
+}
