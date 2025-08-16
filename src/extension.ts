@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
   const removeLogs = vscode.commands.registerCommand(
-    "removeConsoleLogs.removeLogs",
+    "extension.removeConsoleLogs", // match package.json
     () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const insertLog = vscode.commands.registerCommand(
-    "removeConsoleLogs.insertLog",
+    "extension.insertConsoleLog", // match package.json
     () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
