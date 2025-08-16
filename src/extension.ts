@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
         logLine = `console.log('${logPrefix}${selectedText}: ', ${selectedText});`;
       }
 
-      editor.edit((editBuilder) => {
+      editor.edit((editBuilder: any) => {
         const position = selection.active;
         const insertPos = new vscode.Position(position.line + 1, 0);
         editBuilder.insert(insertPos, logLine + "\n");
@@ -94,7 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(removeLogs, insertLog);
 
   // Auto clean on save
-  vscode.workspace.onWillSaveTextDocument((event) => {
+  vscode.workspace.onWillSaveTextDocument((event: any) => {
     const config = vscode.workspace.getConfiguration("removeConsoleLogs");
     const autoClean = config.get("autoCleanOnSave") as boolean;
     if (autoClean) {
