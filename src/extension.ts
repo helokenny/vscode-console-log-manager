@@ -1,112 +1,118 @@
 import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
+  // REMOVE CONSOLE.LOG
   const removeLogs = vscode.commands.registerCommand(
-    "extension.removeConsoleLogs", // match package.json
-    () => {
+    "extension.removeConsoleLogs",
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
 
-      const config = vscode.workspace.getConfiguration("removeConsoleLogs");
-      const includeWarn = config.get("includeWarn") as boolean;
-      const includeError = config.get("includeError") as boolean;
-      const includeDebug = config.get("includeDebug") as boolean;
-      const includeAll = config.get("includeAll") as boolean;
-      const includeInline = config.get("includeInline") as boolean;
-
       const document = editor.document;
-      const edit = new vscode.WorkspaceEdit();
+      const text = document.getText();
+      const includeAll = vscode.workspace
+        .getConfiguration("consoleLogManager")
+        .get<boolean>("includeAll", false);
 
-      let regexStr = "console\\.log\\(.*?\\);?";
-      if (includeAll) {
-        regexStr = "console\\.[a-zA-Z]+\\(.*?\\);?";
-      } else {
-        const parts = ["log"];
-        if (includeWarn) parts.push("warn");
-        if (includeError) parts.push("error");
-        if (includeDebug) parts.push("debug");
-        regexStr = `console\\.(${parts.join("|")})\\(.*?\\);?`;
-      }
+      const logPattern = includeAll
+        ? /^\s*(console\.[\w]+\([^)]*\));?\s*$/gm
+        : /^\s*(console\.log\([^)]*\));?\s*$/gm;
 
-      const regex = new RegExp(regexStr, "g");
+      await editor.edit((editBuilder) => {
+        let match;
+        while ((match = logPattern.exec(text))) {
+          const startPos = document.positionAt(match.index);
+          const endPos = document.positionAt(match.index + match[0].length);
+          const line = startPos.line;
 
-      for (let i = 0; i < document.lineCount; i++) {
-        const line = document.lineAt(i);
-        const text = line.text;
+          // Track range to delete
+          let deleteStart = startPos;
+          let deleteEnd = endPos;
 
-        if (regex.test(text)) {
-          // Delete the console.* line
-          edit.delete(document.uri, line.rangeIncludingLineBreak);
+          // Include blank lines below
+          let nextLine = line + 1;
+          let blankLines = 0;
+          while (
+            nextLine < document.lineCount &&
+            document.lineAt(nextLine).isEmptyOrWhitespace
+          ) {
+            blankLines++;
+            nextLine++;
+          }
 
-          // Also delete only the *immediately following* blank line, if present
-          if (i + 1 < document.lineCount) {
-            const nextLine = document.lineAt(i + 1);
-            if (/^\s*$/.test(nextLine.text)) {
-              edit.delete(document.uri, nextLine.rangeIncludingLineBreak);
-              i++; // Skip ahead since we already removed the next line
+          // Check if there’s an empty line above
+          const hasEmptyAbove =
+            line > 0 && document.lineAt(line - 1).isEmptyOrWhitespace;
+
+          // If above is empty, delete all below
+          if (hasEmptyAbove) {
+            deleteEnd = document.lineAt(nextLine - 1).range.end;
+          } else {
+            // Otherwise, leave 1 blank line max
+            if (blankLines > 1) {
+              deleteEnd = document.lineAt(nextLine - 2).range.end;
+            } else if (blankLines === 1) {
+              // keep one line
+              deleteEnd = document.lineAt(nextLine - 1).range.end;
             }
           }
-        } else if (includeInline && regex.test(text)) {
-          const match = text.match(regex);
-          if (match) {
-            const start = text.indexOf(match[0]);
-            const range = new vscode.Range(
-              new vscode.Position(i, start),
-              new vscode.Position(i, start + match[0].length)
-            );
-            edit.delete(document.uri, range);
-          }
-        }
-      }
 
-      vscode.workspace.applyEdit(edit);
+          editBuilder.delete(new vscode.Range(deleteStart, deleteEnd));
+        }
+      });
     }
   );
 
+  // INSERT CONSOLE.LOG
   const insertLog = vscode.commands.registerCommand(
-    "extension.insertConsoleLog", // match package.json
-    () => {
+    "extension.insertConsoleLog",
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
 
-      const config = vscode.workspace.getConfiguration("removeConsoleLogs");
-      const logPrefix = config.get("logPrefix") as string;
-
+      const document = editor.document;
       const selection = editor.selection;
-      const selectedText = editor.document.getText(selection).trim();
+      const line = selection.active.line;
+      const currentLineText = document.lineAt(line).text;
+      const indentMatch = currentLineText.match(/^(\s*)/);
+      const indentation = indentMatch ? indentMatch[1] : "";
 
-      let logLine = "";
+      const prefix = vscode.workspace
+        .getConfiguration("consoleLogManager")
+        .get<string>("logPrefix", "👉🏻 --->|");
 
-      if (!selectedText) {
-        logLine = `console.log('${logPrefix}');`;
-      } else if (/\s/.test(selectedText)) {
-        logLine = `console.log('${logPrefix}${selectedText}');`;
+      let logText = "";
+      if (!selection.isEmpty) {
+        const selectedText = document.getText(selection);
+        if (/\s/.test(selectedText)) {
+          // multi-word selection
+          logText = `console.log('${prefix} ${selectedText}');`;
+        } else {
+          // likely a variable
+          logText = `console.log('${prefix} ${selectedText}: ', ${selectedText});`;
+        }
       } else {
-        logLine = `console.log('${logPrefix}${selectedText}: ', ${selectedText});`;
+        logText = `console.log('${prefix} ');`;
       }
 
-      // Get indentation from current line
-      const currentLine = editor.document.lineAt(selection.active.line);
-      const indentation = currentLine.text.match(/^\s*/)?.[0] ?? "";
+      // Find statement end (basic: look for ;, }, or ) further down)
+      let insertLine = line;
+      while (
+        insertLine < document.lineCount - 1 &&
+        !/[\};\]\)]\s*$/.test(document.lineAt(insertLine).text.trim())
+      ) {
+        insertLine++;
+      }
 
-      editor.edit((editBuilder: any) => {
-        const position = selection.active;
-        const insertPos = new vscode.Position(position.line + 1, 0);
-        editBuilder.insert(insertPos, indentation + logLine + "\n");
+      const position = new vscode.Position(insertLine + 1, 0);
+
+      await editor.edit((editBuilder) => {
+        editBuilder.insert(position, `${indentation}${logText}\n`);
       });
     }
   );
 
   context.subscriptions.push(removeLogs, insertLog);
-
-  // Auto clean on save
-  vscode.workspace.onWillSaveTextDocument((event: any) => {
-    const config = vscode.workspace.getConfiguration("removeConsoleLogs");
-    const autoClean = config.get("autoCleanOnSave") as boolean;
-    if (autoClean) {
-      vscode.commands.executeCommand("extension.removeConsoleLogs");
-    }
-  });
 }
 
 export function deactivate() {}
