@@ -74,6 +74,15 @@ You can customize these in **File → Preferences → Keyboard Shortcuts**.
 
 ---
 
+## ✨ Change Logs
+
+0.0.3: 
+- the added console log line should have the same indentation as the previous line 
+- when removing lines with console log, only adjoining lines below should be removed
+
+
+---
+
 ## 🛠️ Development
 
 To run this extension locally:

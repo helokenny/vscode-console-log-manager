@@ -32,12 +32,24 @@ export function activate(context: vscode.ExtensionContext) {
 
       for (let i = 0; i < document.lineCount; i++) {
         const line = document.lineAt(i);
-        if (regex.test(line.text)) {
+        const text = line.text;
+
+        if (regex.test(text)) {
+          // Delete the console.* line
           edit.delete(document.uri, line.rangeIncludingLineBreak);
-        } else if (includeInline && regex.test(line.text)) {
-          const match = line.text.match(regex);
+
+          // Also delete only the *immediately following* blank line, if present
+          if (i + 1 < document.lineCount) {
+            const nextLine = document.lineAt(i + 1);
+            if (/^\s*$/.test(nextLine.text)) {
+              edit.delete(document.uri, nextLine.rangeIncludingLineBreak);
+              i++; // Skip ahead since we already removed the next line
+            }
+          }
+        } else if (includeInline && regex.test(text)) {
+          const match = text.match(regex);
           if (match) {
-            const start = line.text.indexOf(match[0]);
+            const start = text.indexOf(match[0]);
             const range = new vscode.Range(
               new vscode.Position(i, start),
               new vscode.Position(i, start + match[0].length)
@@ -47,17 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      vscode.workspace.applyEdit(edit).then(() => {
-        // Cleanup blank lines
-        const cleanupEdit = new vscode.WorkspaceEdit();
-        for (let i = 0; i < document.lineCount; i++) {
-          const line = document.lineAt(i);
-          if (/^\s*$/.test(line.text)) {
-            cleanupEdit.delete(document.uri, line.rangeIncludingLineBreak);
-          }
-        }
-        vscode.workspace.applyEdit(cleanupEdit);
-      });
+      vscode.workspace.applyEdit(edit);
     }
   );
 
@@ -83,10 +85,14 @@ export function activate(context: vscode.ExtensionContext) {
         logLine = `console.log('${logPrefix}${selectedText}: ', ${selectedText});`;
       }
 
+      // Get indentation from current line
+      const currentLine = editor.document.lineAt(selection.active.line);
+      const indentation = currentLine.text.match(/^\s*/)?.[0] ?? "";
+
       editor.edit((editBuilder: any) => {
         const position = selection.active;
         const insertPos = new vscode.Position(position.line + 1, 0);
-        editBuilder.insert(insertPos, logLine + "\n");
+        editBuilder.insert(insertPos, indentation + logLine + "\n");
       });
     }
   );
@@ -98,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration("removeConsoleLogs");
     const autoClean = config.get("autoCleanOnSave") as boolean;
     if (autoClean) {
-      vscode.commands.executeCommand("removeConsoleLogs.removeLogs");
+      vscode.commands.executeCommand("extension.removeConsoleLogs");
     }
   });
 }
