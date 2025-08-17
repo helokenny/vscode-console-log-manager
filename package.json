@@ -2,7 +2,7 @@
   "name": "consolelog-manager",
   "displayName": "Console Log Manager",
   "description": "Quickly insert or remove console.log/debug statements.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "bere-systems",
   "engines": {
     "vscode": "^1.103.0"
