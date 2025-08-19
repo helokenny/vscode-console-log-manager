@@ -79,7 +79,11 @@ You can customize these in **File → Preferences → Keyboard Shortcuts**.
 0.0.3: 
 - the added console log line should have the same indentation as the previous line 
 - when removing lines with console log, only adjoining lines below should be removed
-
+0.1.0:
+- auto insert console.log before every statement, incrementing the index
+0.1.1:
+- auto insert in try-catch block
+- fixed bugs in stacking logs
 
 ---
 

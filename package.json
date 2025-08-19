@@ -2,7 +2,7 @@
   "name": "consolelog-manager",
   "displayName": "Console Log Manager",
   "description": "Smartly insert or remove console.log/debug statements.",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "publisher": "bere-systems",
   "engines": {
     "vscode": "^1.103.0"
@@ -14,73 +14,34 @@
     "type": "git",
     "url": "https://github.com/<your-username>/<your-extension-repo>.git"
   },
+  "main": "./out/extension.js",
   "activationEvents": [
     "onCommand:extension.removeConsoleLogs",
-    "onCommand:extension.insertConsoleLog"
+    "onCommand:extension.insertConsoleLog",
+    "onCommand:extension.autoInsertConsoleLogs"
   ],
-  "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "extension.removeConsoleLogs",
-        "title": "Remove Console Logs"
-      },
-      {
-        "command": "extension.insertConsoleLog",
-        "title": "Insert Console Log"
-      }
+      { "command": "extension.removeConsoleLogs", "title": "Remove Console Logs" },
+      { "command": "extension.insertConsoleLog",  "title": "Insert Console Log" },
+      { "command": "extension.autoInsertConsoleLogs", "title": "Auto Insert Console Logs in Scope" }
     ],
     "keybindings": [
-      {
-        "command": "extension.removeConsoleLogs",
-        "key": "ctrl+alt+d",
-        "when": "editorTextFocus"
-      },
-      {
-        "command": "extension.insertConsoleLog",
-        "key": "ctrl+alt+l",
-        "when": "editorTextFocus"
-      }
+      { "command": "extension.removeConsoleLogs", "key": "ctrl+alt+d", "when": "editorTextFocus" },
+      { "command": "extension.insertConsoleLog",  "key": "ctrl+alt+l", "when": "editorTextFocus" },
+      { "command": "extension.autoInsertConsoleLogs", "key": "ctrl+alt+a", "when": "editorTextFocus" }
     ],
     "configuration": {
       "type": "object",
       "title": "Console Log Manager",
       "properties": {
-        "removeConsoleLogs.includeWarn": {
-          "type": "boolean",
-          "default": false,
-          "description": "Also remove console.warn statements"
-        },
-        "removeConsoleLogs.includeError": {
-          "type": "boolean",
-          "default": false,
-          "description": "Also remove console.error statements"
-        },
-        "removeConsoleLogs.includeDebug": {
-          "type": "boolean",
-          "default": false,
-          "description": "Also remove console.debug statements"
-        },
-        "removeConsoleLogs.includeAll": {
-          "type": "boolean",
-          "default": false,
-          "description": "Remove all console.* statements"
-        },
-        "removeConsoleLogs.includeInline": {
-          "type": "boolean",
-          "default": false,
-          "description": "Also remove inline console statements"
-        },
-        "removeConsoleLogs.autoCleanOnSave": {
-          "type": "boolean",
-          "default": false,
-          "description": "Automatically clean console logs on save"
-        },
-        "removeConsoleLogs.logPrefix": {
-          "type": "string",
-          "default": "👉🏻 --->| ",
-          "description": "Prefix for inserted console.log statements"
-        }
+        "removeConsoleLogs.includeWarn":   { "type": "boolean", "default": false, "description": "Also remove console.warn statements" },
+        "removeConsoleLogs.includeError":  { "type": "boolean", "default": false, "description": "Also remove console.error statements" },
+        "removeConsoleLogs.includeDebug":  { "type": "boolean", "default": false, "description": "Also remove console.debug statements" },
+        "removeConsoleLogs.includeAll":    { "type": "boolean", "default": false, "description": "Remove all console.* statements" },
+        "removeConsoleLogs.includeInline": { "type": "boolean", "default": false, "description": "Also remove inline console statements" },
+        "removeConsoleLogs.autoCleanOnSave": { "type": "boolean", "default": false, "description": "Automatically clean console logs on save" },
+        "removeConsoleLogs.logPrefix":     { "type": "string",  "default": "👉🏻 --->| ", "description": "Prefix for inserted console.log statements" }
       }
     }
   },
